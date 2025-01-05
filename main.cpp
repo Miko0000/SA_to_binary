@@ -18,29 +18,61 @@ void print_help(char *argv[]);
     //=====================================================
     // Convert ASCII codes
 
-int pre_convert(int c) {
+int pre_convert(int c, int t, int r) {
+            //(input, type, rotate)
 
-    // Turn ASCII codes into the values that they should be converted into.
+    if(c == EOF) {
+        return EOF;
+    }
 
-
-    if(c >= 48 && c < 58) {
+    if(c >= 48 && c <= 57) {
         c = c - 48;
-    } else if(c >= 65 && c < 91) {
-        c = c - 65 + 10;
+    } else if(c >= 65 && c <= 86) {
+        c = c - 55;
     } else {
-        c = 0;
+        return -2;
+    }
+    if(c >= t) {
+        return -2;
+    }
+
+    // Rotate by r if r is not 0
+
+    if(r != 0) {
+        c = c + r;
+        if(c > (t - 1)) {
+            c = c - (t - 1);
+        }
     }
 
     // Return converter result
-
     return c;
 }
 
     //=====================================================
     // This function gets the size of input bits
 
-int get_size(char byte) {
+int get_size(char byte, int t) {
 
+    if(t == 2) {
+        return 1;
+    }
+    if(t >= 3 && t <= 4) {
+        return 2;
+    }
+    if(t >= 5 && t <= 8) {
+        return 3;
+    }
+    if(t >= 9 && t <= 16) {
+        return 4;
+    }
+    if(t >= 17 && t <= 32) {
+        return 5;
+    }
+
+    // previous code (may be useful later?)
+
+    /*
     unsigned char i = 0b10000000;
 
     int size = 0;
@@ -53,6 +85,9 @@ int get_size(char byte) {
     } else {
         return 1;
     }
+    */
+
+    return 1;
 }
 
     //=====================================================
@@ -90,14 +125,15 @@ int check(int argc, char *argv[]) {
     // Set valid arguments
 
     argv_set(valid, 0, "-h", argc, argv);
-    argv_set(valid, 1, "-p", argc, argv); // TODO (-t required)
+    argv_set(valid, 1, "-c", argc, argv); // TODO
     argv_set(valid, 2, "-s", argc, argv);
     argv_set(valid, 3, "-i", argc, argv);
-    argv_set(valid, 4, "-c", argc, argv); // TODO later
+    argv_set(valid, 4, "-r", argc, argv); // TODO
     argv_set(valid, 5, "-in", argc, argv);
     argv_set(valid, 6, "-out", argc, argv);
-    argv_set(valid, 7, "-t", argc, argv); // TODO (-p required)
+    argv_set(valid, 7, "-t", argc, argv);
     argv_set(valid, 8, "-e", argc, argv);
+    argv_set(valid, 9, "-table", argc, argv); //TODO
 
     // Print help and exit if -h argument given
 
@@ -168,97 +204,53 @@ int check(int argc, char *argv[]) {
     int a = 0;
     int b = 0;
     int c = 0;
-    int nused = 8 - s;
-    int abs = 0;
+    int d = 0;
+    int used = s;
     int r = 0;
+    int rotate = 0;
 
-    // Read first character from file
-
-    a = fgetc(fp_in);
-    a = pre_convert(a);
-
-    // Loop until EOF is reached
+    // Loop until all characters are converted
 
     while(a != EOF) {
-
-        // Set result (r) to 0
-
-        r = 0;
-
-        // Add bits to result until nused is less than or equal to 0
-
-        while(nused > 0 && a != EOF) {
-            r = (r << get_size(a)) | a;
-            nused = nused - get_size(a);
-            if(nused > 0) {
-                a = fgetc(fp_in);
-                if( a == EOF )
-                    break;
-                a = pre_convert(a);
-            }
+        while(a != EOF && used < 8) {
+            a = fgetc(fp_in);
+            a = pre_convert(a,n,rotate);
+            if(a < 0)
+                continue;
+            r = (r << get_size(a,n)) | a;
+            used = used + get_size(a,n);
         }
-
-        // If nused is less than 0, then do operations to split result
-        // into 2 separate bytes. Write one to the output file and the other then takes
-        // the place of result.
-
-        if(nused < 0 && a != EOF) {
-            abs = 0;
-            while(nused != 0) {
-                abs++;
-                nused++;
-            }
-            b = 0;
+        if(used > 8) {
             c = 0;
-            while(b != abs) {
+            while(d != (used - 8)) {
                 c = (c << 1) + 1;
-                b++;
+                d++;
             }
-            a = r & b;
-            r = r >> abs;
+            b = r & c;
+            r = r >> d;
+            used = 8;
+        }
+        if(a == EOF) {
+            r = r << (8 - used);
+        }
+        if((a == EOF && used != 0) || used == 8) {
             if(argv_get(valid, 8)[0] == '-' ) {
                 r = Rbitorder(r);
             }
             if(argv_get(valid, 3)[0] == '-' ) {
                 r = invert(r);
             }
-            fputc((unsigned char) r, fp_out); // write to file
+            fputc((unsigned char) r, fp_out);
+            r = 0;
+            used = 0;
+        }
+        if(d != 0) {
             r = b;
-            nused = 8 - abs;
-            a = fgetc(fp_in);
-            if( a == EOF )
-                break;
-            a = pre_convert(a);
+            used = d;
+            d = 0;
         }
-
-        // If nused is 0, write result to output file.
-
-        if(nused == 0 && a != EOF) {
-            a = fgetc(fp_in);
-            if( a == EOF )
-                break;
-            a = pre_convert(a);
-        }
-
-        // If EOF is reached, shift result right by nused.
-
-        if(a == EOF){
-            r = r << nused;
-        }
-
-        // Set "unused" bits (nused) to 8
-
-        nused = 8;
-
-        // Write result to output file
-        if(argv_get(valid, 8)[0] == '-' ) {
-            r = Rbitorder(r);
-        }
-        if(argv_get(valid, 3)[0] == '-' ) {
-            r = invert(r);
-        }
-        fputc((unsigned char) r, fp_out);
     }
+
 
     // Close files and exit
 
@@ -298,7 +290,7 @@ int main(int argc, char *argv[]) {
 
 void print_help(char *argv[]) {
     const char *text1 =
-    "SA to binary converter v1.1\n\n"
+    "SA to binary converter v1.2\n\n"
     "Usage:\n";
     std::cout << text1;
 
@@ -309,15 +301,16 @@ void print_help(char *argv[]) {
 
     const char *text2 =
     "Options:\n"
-    " -in  <file_name>  File input\n"
-    " -out <file_name>  File output\n"
-    " -e                Reverse bit order\n"
-   // " -t <n>            Type (where n is 2-32)\n"
-    " -i                Invert output\n"
-   // " -p                Try all possibilities\n"
-    " -s <n>            Shift bits (where n is 1-7)\n"
-   // " -c                crazy (check github for explanation)\n"
-    " -h                Prints this help message\n";
+    " -in  <file_name>   File input\n"
+    " -out <file_name>   File output\n"
+    // " -table <file name> (see github for table format)\n" // TODO
+    // " -c                 Try all combinations\n" // TODO
+    " -e                 Reverse bit order\n"
+    " -i                 Invert output\n"
+    // " -r                 Rotate conversion table (creates more than one file)\n" //TODO
+    " -s <n>             Shift bits (where n is 1-7)\n"
+    " -t <n>             Type (where n is 2-32)\n"
+    " -h                 Prints this help message\n";
     std::cout << text2;
     return ;
 }
