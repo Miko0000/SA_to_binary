@@ -164,4 +164,12 @@ At least compiling for Windows on Linux seems to break something. It runs, but d
 * Add option: Try different combinations by rotating the table
 * Add option: Try all combinations.
 * Add option: Convert using custom table.
-* Add GUI maybe.
+
+## GUI TODO
+
+* Remove unusued lines of code, unfreed references, unusued files, etc
+* Add installer for Windows
+* Add uninstaller
+* Add more options
+* Add custom table
+* Fix memory leak

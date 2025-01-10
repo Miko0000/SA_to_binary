@@ -1,0 +1,6 @@
+[Desktop Entry]
+Type=Application
+Name=SA to Binary
+Icon=sa-to-binary
+Category=Development
+Exec=%s

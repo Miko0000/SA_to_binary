@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gresources>
+	<gresource prefix="/com/kingwing/sa-to-binary">
+		<file>icon.png</file>
+		<file>icon-48x48.png</file>
+		<file>app.desktop</file>
+
+		<file>contributor/Miko0000/icon.png</file>
+		<file>contributor/KingWing/icon.png</file>
+	</gresource>
+</gresources>
+

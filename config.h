@@ -1,0 +1,1 @@
+#define CONFIG_DISABLE_GUI 0

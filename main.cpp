@@ -5,8 +5,12 @@
  *
  *
  */
+#define VERSION "1.2"
+#define GITHUB_LINK "https:/""/github.com/KingWing34/SA_to_binary.git"
+#define DISCORD_LINK "https:/""/discord.gg/fwjc86ERXq"
 #include <iostream>
 #include "argv.h"
+#include "config.h"
 #include <stdlib.h>
 
     //=====================================================
@@ -261,8 +265,10 @@ int check(int argc, char *argv[]) {
 
     //=====================================================
     // Main function
-
+char *argv_0 = NULL;
+extern "C" int gui(int argc, char *argv[]);
 int main(int argc, char *argv[]) {
+    argv_0 = argv[0];
 
     // If too many arguments, tell user to check help!
 
@@ -280,7 +286,8 @@ int main(int argc, char *argv[]) {
     // No arguments, print help
 
     if ( argc == 1) {
-        print_help(argv);
+        //print_help(argv);
+        gui(argc, argv);
         return 1;
     }
 }
@@ -290,7 +297,7 @@ int main(int argc, char *argv[]) {
 
 void print_help(char *argv[]) {
     const char *text1 =
-    "SA to binary converter v1.2\n\n"
+    "SA to binary converter " VERSION "\n\n"
     "Usage:\n";
     std::cout << text1;
 
@@ -314,3 +321,5 @@ void print_help(char *argv[]) {
     std::cout << text2;
     return ;
 }
+
+#include "gui.h"
