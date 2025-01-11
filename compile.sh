@@ -24,5 +24,5 @@ if test -n "$CPU"; then
 	CPU_STR="-$CPU"
 fi
 
-clang++ $( pkg-config --cflags gtk4 ) -o bin/sa-to-binary_$ARCH \
+g++ $( pkg-config --cflags gtk4 ) -o bin/sa-to-binary_$ARCH \
 	main.cpp $( pkg-config --libs gtk4 ) $TARGET_STR $CPU_STR
