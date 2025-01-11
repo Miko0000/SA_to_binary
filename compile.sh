@@ -12,5 +12,17 @@ glib-compile-resources \
 	--c-name gr_kw \
 	resources.xml
 
-g++ $( pkg-config --cflags gtk4 ) -o bin/sa-to-binary_$(gcc -dumpmachine) \
-	main.cpp $( pkg-config --libs gtk4 )
+TARGET_STR=""
+ARCH="$(gcc -dumpmachine)"
+if test -n "$TARGET"; then
+	TARGET_STR="-target $TARGET"
+	ARCH=$TARGET
+fi
+
+CPU_STR=""
+if test -n "$CPU"; then
+	CPU_STR="-$CPU"
+fi
+
+clang++ $( pkg-config --cflags gtk4 ) -o bin/sa-to-binary_$ARCH \
+	main.cpp $( pkg-config --libs gtk4 ) $TARGET_STR $CPU_STR

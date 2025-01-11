@@ -7,6 +7,7 @@ extern "C" {
 #define INCBIN_PREFIX g_
 
 #include <gtk/gtk.h>
+#include <gtk/gtkfiledialog.h>
 #include <unistd.h>
 
 #include "incbin.h"
